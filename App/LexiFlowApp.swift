@@ -3,7 +3,7 @@ import SwiftUI
 @main
 struct LexiFlowApp: App {
     @StateObject private var store = StudySetStore()
-    @AppStorage("appLanguage") private var appLanguage = "en"
+    @AppStorage("appLanguage") private var appLanguage = "tr"
     
     var body: some Scene {
         WindowGroup {
