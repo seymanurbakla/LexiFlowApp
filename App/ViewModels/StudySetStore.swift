@@ -1,108 +1,93 @@
 import Foundation
-import FirebaseFirestore
-import FirebaseFirestoreSwift
-import FirebaseAuth
-import Combine
+import SwiftUI
 
 class StudySetStore: ObservableObject {
-    @Published var studySets: [StudySet] = []
-    
-    private var db = Firestore.firestore()
-    private var listenerRegistration: ListenerRegistration?
-    private var cancellables = Set<AnyCancellable>()
-    
-    init() {
-        // Listen to auth state changes to load data for the correct user
-        Auth.auth().addStateDidChangeListener { [weak self] _, user in
-            if let user = user {
-                self?.startListening(for: user.uid)
-            } else {
-                self?.stopListening()
-                self?.studySets = []
-            }
+    @Published var studySets: [StudySet] = [] {
+        didSet {
+            saveToLocal()
         }
     }
     
-    private var userStudySetsCollection: CollectionReference? {
-        guard let uid = Auth.auth().currentUser?.uid else { return nil }
-        return db.collection("users").document(uid).collection("studySets")
-    }
+    private let fileName = "lexiflow_data.json"
     
-    private func startListening(for uid: String) {
-        stopListening()
+    init() {
+        loadFromLocal()
         
-        listenerRegistration = db.collection("users").document(uid).collection("studySets")
-            .addSnapshotListener { [weak self] querySnapshot, error in
-                guard let documents = querySnapshot?.documents else {
-                    print("Error fetching study sets: \(String(describing: error))")
-                    return
-                }
-                
-                self?.studySets = documents.compactMap { document in
-                    try? document.data(as: StudySet.self)
-                }
-            }
+        // If empty after loading, add some samples
+        if studySets.isEmpty {
+            studySets = [
+                StudySet(title: "Spanish Basics", cards: [
+                    Flashcard(word: "Hola", meaning: "Hello", exampleSentence: "Hola, ¿cómo estás?"),
+                    Flashcard(word: "Adiós", meaning: "Goodbye", exampleSentence: "Adiós, hasta mañana."),
+                    Flashcard(word: "Por favor", meaning: "Please", exampleSentence: "¿Me ayudas, por favor?"),
+                    Flashcard(word: "Gracias", meaning: "Thank you", exampleSentence: "Gracias por tu ayuda.")
+                ]),
+                StudySet(title: "Swift Concepts", cards: [
+                    Flashcard(word: "Struct", meaning: "A value type in Swift used to encapsulate related properties and behaviors.", exampleSentence: "Structs are passed by value."),
+                    Flashcard(word: "Class", meaning: "A reference type in Swift.", exampleSentence: "Classes support inheritance."),
+                    Flashcard(word: "Protocol", meaning: "Defines a blueprint of methods, properties, and other requirements.", exampleSentence: "A struct can conform to multiple protocols.")
+                ])
+            ]
+        }
     }
     
-    private func stopListening() {
-        listenerRegistration?.remove()
-        listenerRegistration = nil
+    private func getDocumentsDirectory() -> URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    }
+    
+    private func saveToLocal() {
+        let url = getDocumentsDirectory().appendingPathComponent(fileName)
+        do {
+            let data = try JSONEncoder().encode(studySets)
+            try data.write(to: url, options: [.atomicWrite, .completeFileProtection])
+        } catch {
+            print("Could not save data: \(error.localizedDescription)")
+        }
+    }
+    
+    private func loadFromLocal() {
+        let url = getDocumentsDirectory().appendingPathComponent(fileName)
+        guard FileManager.default.fileExists(atPath: url.path) else { return }
+        
+        do {
+            let data = try Data(contentsOf: url)
+            studySets = try JSONDecoder().decode([StudySet].self, from: data)
+        } catch {
+            print("Could not load data: \(error.localizedDescription)")
+        }
     }
     
     func addStudySet(_ set: StudySet) {
-        guard let collection = userStudySetsCollection else { return }
-        do {
-            try collection.document(set.id.uuidString).setData(from: set)
-        } catch {
-            print("Error adding study set: \(error)")
-        }
+        studySets.append(set)
     }
     
     func updateStudySet(_ updatedSet: StudySet) {
-        guard let collection = userStudySetsCollection else { return }
-        do {
-            try collection.document(updatedSet.id.uuidString).setData(from: updatedSet)
-        } catch {
-            print("Error updating study set: \(error)")
+        if let index = studySets.firstIndex(where: { $0.id == updatedSet.id }) {
+            studySets[index] = updatedSet
         }
     }
     
     func deleteStudySet(_ set: StudySet) {
-        guard let collection = userStudySetsCollection else { return }
-        collection.document(set.id.uuidString).delete { error in
-            if let error = error {
-                print("Error deleting study set: \(error)")
-            }
-        }
+        studySets.removeAll { $0.id == set.id }
     }
     
     func updateFlashcard(_ card: Flashcard, in setID: UUID) {
-        // Local fast update to avoid UI jitter before network returns
         if let setIndex = studySets.firstIndex(where: { $0.id == setID }) {
             if let cardIndex = studySets[setIndex].cards.firstIndex(where: { $0.id == card.id }) {
                 studySets[setIndex].cards[cardIndex] = card
                 self.objectWillChange.send()
-                
-                // Write the whole updated set back to Firestore
-                let updatedSet = studySets[setIndex]
-                updateStudySet(updatedSet)
+                saveToLocal()
             }
         }
     }
     
     func resetFlashcardProgress(for setID: UUID) {
         if let setIndex = studySets.firstIndex(where: { $0.id == setID }) {
-            var updatedSet = studySets[setIndex]
-            for i in 0..<updatedSet.cards.count {
-                updatedSet.cards[i].isKnown = false
+            for i in 0..<studySets[setIndex].cards.count {
+                studySets[setIndex].cards[i].isKnown = false
             }
-            
-            // Fast local update
-            studySets[setIndex] = updatedSet
             self.objectWillChange.send()
-            
-            // Network update
-            updateStudySet(updatedSet)
+            saveToLocal()
         }
     }
 }
