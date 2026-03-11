@@ -9,6 +9,7 @@ import AppleProductTypes
 
 let package = Package(
     name: "LexiFlowApp",
+    defaultLocalization: "en",
     platforms: [
         .iOS("16.0")
     ],
