@@ -8,8 +8,8 @@ struct TestSessionView: View {
     @State private var selectedAnswer: String? = nil
     @State private var showNextButton = false
     
-    init(studySet: StudySet, store: StudySetStore) {
-        _viewModel = StateObject(wrappedValue: TestSessionViewModel(studySet: studySet, store: store))
+    init(studySets: [StudySet], store: StudySetStore) {
+        _viewModel = StateObject(wrappedValue: TestSessionViewModel(studySets: studySets, store: store))
     }
     
     var body: some View {

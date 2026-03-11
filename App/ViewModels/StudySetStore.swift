@@ -1,57 +1,108 @@
 import Foundation
+import FirebaseFirestore
+import FirebaseFirestoreSwift
+import FirebaseAuth
+import Combine
 
 class StudySetStore: ObservableObject {
     @Published var studySets: [StudySet] = []
     
+    private var db = Firestore.firestore()
+    private var listenerRegistration: ListenerRegistration?
+    private var cancellables = Set<AnyCancellable>()
+    
     init() {
-        // Pre-populate with some sample data for demonstration purposes
-        studySets = [
-            StudySet(title: "Spanish Basics", cards: [
-                Flashcard(word: "Hola", meaning: "Hello", exampleSentence: "Hola, ¿cómo estás?"),
-                Flashcard(word: "Adiós", meaning: "Goodbye", exampleSentence: "Adiós, hasta mañana."),
-                Flashcard(word: "Por favor", meaning: "Please", exampleSentence: "¿Me ayudas, por favor?"),
-                Flashcard(word: "Gracias", meaning: "Thank you", exampleSentence: "Gracias por tu ayuda.")
-            ]),
-            StudySet(title: "Swift Concepts", cards: [
-                Flashcard(word: "Struct", meaning: "A value type in Swift used to encapsulate related properties and behaviors.", exampleSentence: "Structs are passed by value."),
-                Flashcard(word: "Class", meaning: "A reference type in Swift.", exampleSentence: "Classes support inheritance."),
-                Flashcard(word: "Protocol", meaning: "Defines a blueprint of methods, properties, and other requirements.", exampleSentence: "A struct can conform to multiple protocols.")
-            ])
-        ]
+        // Listen to auth state changes to load data for the correct user
+        Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            if let user = user {
+                self?.startListening(for: user.uid)
+            } else {
+                self?.stopListening()
+                self?.studySets = []
+            }
+        }
+    }
+    
+    private var userStudySetsCollection: CollectionReference? {
+        guard let uid = Auth.auth().currentUser?.uid else { return nil }
+        return db.collection("users").document(uid).collection("studySets")
+    }
+    
+    private func startListening(for uid: String) {
+        stopListening()
+        
+        listenerRegistration = db.collection("users").document(uid).collection("studySets")
+            .addSnapshotListener { [weak self] querySnapshot, error in
+                guard let documents = querySnapshot?.documents else {
+                    print("Error fetching study sets: \(String(describing: error))")
+                    return
+                }
+                
+                self?.studySets = documents.compactMap { document in
+                    try? document.data(as: StudySet.self)
+                }
+            }
+    }
+    
+    private func stopListening() {
+        listenerRegistration?.remove()
+        listenerRegistration = nil
     }
     
     func addStudySet(_ set: StudySet) {
-        studySets.append(set)
+        guard let collection = userStudySetsCollection else { return }
+        do {
+            try collection.document(set.id.uuidString).setData(from: set)
+        } catch {
+            print("Error adding study set: \(error)")
+        }
     }
     
     func updateStudySet(_ updatedSet: StudySet) {
-        if let index = studySets.firstIndex(where: { $0.id == updatedSet.id }) {
-            studySets[index] = updatedSet
+        guard let collection = userStudySetsCollection else { return }
+        do {
+            try collection.document(updatedSet.id.uuidString).setData(from: updatedSet)
+        } catch {
+            print("Error updating study set: \(error)")
         }
     }
     
     func deleteStudySet(_ set: StudySet) {
-        studySets.removeAll { $0.id == set.id }
+        guard let collection = userStudySetsCollection else { return }
+        collection.document(set.id.uuidString).delete { error in
+            if let error = error {
+                print("Error deleting study set: \(error)")
+            }
+        }
     }
     
-    // Updates a specific flashcard inside a study set (useful for marking as known/unknown)
     func updateFlashcard(_ card: Flashcard, in setID: UUID) {
+        // Local fast update to avoid UI jitter before network returns
         if let setIndex = studySets.firstIndex(where: { $0.id == setID }) {
             if let cardIndex = studySets[setIndex].cards.firstIndex(where: { $0.id == card.id }) {
                 studySets[setIndex].cards[cardIndex] = card
-                
-                // Workaround to force UI update if nested changes aren't picked up readily
                 self.objectWillChange.send()
+                
+                // Write the whole updated set back to Firestore
+                let updatedSet = studySets[setIndex]
+                updateStudySet(updatedSet)
             }
         }
     }
     
     func resetFlashcardProgress(for setID: UUID) {
         if let setIndex = studySets.firstIndex(where: { $0.id == setID }) {
-            for i in 0..<studySets[setIndex].cards.count {
-                studySets[setIndex].cards[i].isKnown = false
+            var updatedSet = studySets[setIndex]
+            for i in 0..<updatedSet.cards.count {
+                updatedSet.cards[i].isKnown = false
             }
+            
+            // Fast local update
+            studySets[setIndex] = updatedSet
             self.objectWillChange.send()
+            
+            // Network update
+            updateStudySet(updatedSet)
         }
     }
 }

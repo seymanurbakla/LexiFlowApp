@@ -2,11 +2,14 @@ import SwiftUI
 
 struct StudySetListView: View {
     @EnvironmentObject var store: StudySetStore
+    @EnvironmentObject var authManager: AuthManager
     @State private var showingEditSheet = false
+    @State private var selection = Set<UUID>()
+    @AppStorage("appLanguage") private var appLanguage = "en"
     
     var body: some View {
         NavigationStack {
-            List {
+            List(selection: $selection) {
                 ForEach(store.studySets) { set in
                     NavigationLink(destination: StudySetDetailView(studySetID: set.id)) {
                         VStack(alignment: .leading, spacing: 5) {
@@ -26,15 +29,50 @@ struct StudySetListView: View {
             .navigationTitle("Your Study Sets")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showingEditSheet = true }) {
-                        Image(systemName: "plus")
+                    HStack {
+                        EditButton()
+                        Button(action: { showingEditSheet = true }) {
+                            Image(systemName: "plus")
+                        }
                     }
                 }
-                #if os(iOS)
+                
                 ToolbarItem(placement: .navigationBarLeading) {
-                    EditButton()
+                    Menu {
+                        Picker("Language", selection: $appLanguage) {
+                            Text("English").tag("en")
+                            Text("Türkçe").tag("tr")
+                        }
+                        
+                        Divider()
+                        
+                        Button(role: .destructive, action: {
+                            authManager.signOut()
+                        }) {
+                            Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                        }
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
                 }
-                #endif
+            }
+            .safeAreaInset(edge: .bottom) {
+                if selection.count > 1 {
+                    NavigationLink(destination: TestSessionView(studySets: store.studySets.filter { selection.contains($0.id) }, store: store)) {
+                        Text(String(format: NSLocalizedString("Mix & Test (%d sets)", comment: ""), selection.count))
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.indigo)
+                            .cornerRadius(10)
+                            .padding()
+                            .shadow(radius: 5)
+                        
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .animation(.spring(), value: selection.count)
+                }
             }
             .sheet(isPresented: $showingEditSheet) {
                 NavigationStack {

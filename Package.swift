@@ -12,6 +12,10 @@ let package = Package(
     platforms: [
         .iOS("16.0")
     ],
+    dependencies: [
+        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "10.15.0"),
+        .package(url: "https://github.com/google/GoogleSignIn-iOS.git", from: "7.0.0")
+    ],
     products: [
         .iOSApplication(
             name: "LexiFlow",
@@ -35,6 +39,12 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "AppModule",
+            dependencies: [
+                .product(name: "FirebaseAuth", package: "firebase-ios-sdk"),
+                .product(name: "FirebaseFirestore", package: "firebase-ios-sdk"),
+                .product(name: "FirebaseFirestoreSwift", package: "firebase-ios-sdk"),
+                .product(name: "GoogleSignIn", package: "GoogleSignIn-iOS")
+            ],
             path: "App",
             resources: [
                 .process("Assets.xcassets")

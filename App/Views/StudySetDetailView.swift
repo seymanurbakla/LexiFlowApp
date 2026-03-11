@@ -23,7 +23,7 @@ struct StudySetDetailView: View {
                                 .foregroundColor(.blue)
                         }
                         
-                        NavigationLink(destination: TestSessionView(studySet: validSet, store: store)) {
+                        NavigationLink(destination: TestSessionView(studySets: [validSet], store: store)) {
                             Label("Test", systemImage: "checkmark.seal.fill")
                                 .font(.headline)
                                 .foregroundColor(.green)

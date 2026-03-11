@@ -3,6 +3,7 @@ import Foundation
 struct Question: Identifiable {
     let id = UUID()
     let card: Flashcard
+    let studySetID: UUID
     let options: [String]
     let correctAnswer: String
 }
@@ -13,11 +14,11 @@ class TestSessionViewModel: ObservableObject {
     @Published var score = 0
     @Published var isFinished = false
     
-    private var studySet: StudySet
+    private var studySets: [StudySet]
     private var store: StudySetStore
     
-    init(studySet: StudySet, store: StudySetStore) {
-        self.studySet = studySet
+    init(studySets: [StudySet], store: StudySetStore) {
+        self.studySets = studySets
         self.store = store
         generateTest()
     }
@@ -28,11 +29,20 @@ class TestSessionViewModel: ObservableObject {
     }
     
     func generateTest() {
-        guard studySet.cards.count > 0 else { return }
+        var allCardsWithSets: [(Flashcard, UUID)] = []
+        var allMeanings: [String] = []
         
-        let allMeanings = studySet.cards.map { $0.meaning }
+        for set in studySets {
+            for card in set.cards {
+                allCardsWithSets.append((card, set.id))
+                allMeanings.append(card.meaning)
+            }
+        }
         
-        questions = studySet.cards.shuffled().map { card in
+        guard allCardsWithSets.count > 0 else { return }
+        
+        questions = allCardsWithSets.shuffled().map { item in
+            let (card, setID) = item
             var options = [card.meaning]
             var otherMeanings = allMeanings.filter { $0 != card.meaning }.shuffled()
             
@@ -41,7 +51,7 @@ class TestSessionViewModel: ObservableObject {
                 options.append(otherMeanings.removeFirst())
             }
             
-            return Question(card: card, options: options.shuffled(), correctAnswer: card.meaning)
+            return Question(card: card, studySetID: setID, options: options.shuffled(), correctAnswer: card.meaning)
         }
     }
     
@@ -54,7 +64,7 @@ class TestSessionViewModel: ObservableObject {
             // Incorrect answer. Mark as "don't know" so it appears in flashcards again.
             var updatedCard = question.card
             updatedCard.isKnown = false
-            store.updateFlashcard(updatedCard, in: studySet.id)
+            store.updateFlashcard(updatedCard, in: question.studySetID)
         }
         
         if currentIndex < questions.count - 1 {
