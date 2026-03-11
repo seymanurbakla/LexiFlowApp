@@ -8,7 +8,7 @@ import PackageDescription
 import AppleProductTypes
 
 let package = Package(
-    name: "LexiFlow",
+    name: "LexiFlowApp",
     platforms: [
         .iOS("16.0")
     ],
@@ -18,9 +18,9 @@ let package = Package(
     ],
     products: [
         .iOSApplication(
-            name: "LexiFlow",
+            name: "LexiFlowApp",
             targets: ["AppModule"],
-            bundleIdentifier: "com.example.quizletclone",
+            bundleIdentifier: "com.seymanurbakla.lexiflowapp",
             displayVersion: "1.0",
             bundleVersion: "1",
             supportedDeviceFamilies: [

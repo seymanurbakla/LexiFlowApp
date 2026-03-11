@@ -15,7 +15,7 @@ struct LoginView: View {
                 .foregroundColor(.blue)
                 .padding(.bottom, 20)
             
-            Text("LexiFlow")
+            Text("LexiFlowApp")
                 .font(.system(size: 40, weight: .bold, design: .rounded))
             
             Text("Learn vocabulary and sync across all your devices.")
