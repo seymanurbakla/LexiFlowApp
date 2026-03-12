@@ -20,7 +20,7 @@ struct TestSessionView: View {
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
-                    Text("\(NSLocalizedString("Score", comment: "" || "Score")): \(viewModel.score) / \(viewModel.questions.count)")
+                    Text("\(NSLocalizedString("Score", comment: "Score")): \(viewModel.score) / \(viewModel.questions.count)")
                         .font(.title2)
                     
                     Text(NSLocalizedString("Incorrect answers have been added back to your flashcard review stack.", comment: ""))
@@ -35,7 +35,7 @@ struct TestSessionView: View {
                 }
             } else if let question = viewModel.currentQuestion {
                 VStack(spacing: 20) {
-                    Text("\(NSLocalizedString("Question", comment: "" || "Question")) \(viewModel.currentIndex + 1) \(NSLocalizedString("of", comment: "" || "of")) \(viewModel.questions.count)")
+                    Text("\(NSLocalizedString("Question", comment: "Question")) \(viewModel.currentIndex + 1) \(NSLocalizedString("of", comment: "of")) \(viewModel.questions.count)")
                         .font(.headline)
                         .padding(.top)
                     
