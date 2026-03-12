@@ -32,3 +32,8 @@
 
 "Cancel Selection" = "Seçimi İptal Et";
 "Select Sets" = "Setleri Seç";
+
+"Mix Sets" = "Setleri Karıştır";
+"Select Sets to Mix" = "Karıştırılacak Setleri Seç";
+"Mix Everything" = "Her Şeyi Karıştır";
+"Select at least 2 sets." = "En az 2 set seçin.";
