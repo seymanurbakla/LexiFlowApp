@@ -16,26 +16,26 @@ struct TestSessionView: View {
         VStack {
             if viewModel.isFinished {
                 VStack(spacing: 20) {
-                    Text(NSLocalizedString("Test Complete!", comment: ""))
+                    Text("Test Complete!")
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
-                    Text("\(NSLocalizedString("Score", comment: "Score")): \(viewModel.score) / \(viewModel.questions.count)")
+                    Text("Score: \(viewModel.score) / \(viewModel.questions.count)")
                         .font(.title2)
                     
-                    Text(NSLocalizedString("Incorrect answers have been added back to your flashcard review stack.", comment: ""))
+                    Text("Incorrect answers have been added back to your flashcard review stack.")
                         .multilineTextAlignment(.center)
                         .foregroundColor(.secondary)
                         .padding()
                     
-                    Button(NSLocalizedString("Done", comment: "")) {
+                    Button("Done") {
                         dismiss()
                     }
                     .buttonStyle(.borderedProminent)
                 }
             } else if let question = viewModel.currentQuestion {
                 VStack(spacing: 20) {
-                    Text("\(NSLocalizedString("Question", comment: "Question")) \(viewModel.currentIndex + 1) \(NSLocalizedString("of", comment: "of")) \(viewModel.questions.count)")
+                    Text("Question \(viewModel.currentIndex + 1) of \(viewModel.questions.count)")
                         .font(.headline)
                         .padding(.top)
                     
@@ -43,7 +43,7 @@ struct TestSessionView: View {
                         .padding(.horizontal)
                         .padding(.bottom)
                     
-                    Text(NSLocalizedString("What is the meaning of:", comment: ""))
+                    Text("What is the meaning of:")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
@@ -77,7 +77,7 @@ struct TestSessionView: View {
                     Spacer()
                     
                     if showNextButton {
-                        Button(NSLocalizedString("Next", comment: "")) {
+                        Button("Next") {
                             viewModel.answerCurrentQuestion(with: selectedAnswer ?? "")
                             selectedAnswer = nil
                             showNextButton = false
@@ -89,10 +89,10 @@ struct TestSessionView: View {
                 }
                 .padding()
             } else {
-                Text(NSLocalizedString("Not enough cards to generate a test.", comment: ""))
+                Text("Not enough cards to generate a test.")
             }
         }
-        .navigationTitle(NSLocalizedString("Test", comment: ""))
+        .navigationTitle("Test")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             if let firstSet = store.studySets.first(where: { set in viewModel.questions.contains(where: { $0.card.id == set.cards.first?.id }) }) {

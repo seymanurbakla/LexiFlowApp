@@ -2,13 +2,14 @@ import SwiftUI
 
 struct StudySetListView: View {
     @EnvironmentObject var store: StudySetStore
+    @State private var showingSelection = false
     @State private var showingEditSheet = false
     @State private var selection = Set<UUID>()
     @AppStorage("appLanguage") private var appLanguage = "tr"
     
     var body: some View {
         NavigationStack {
-            List(selection: $selection) {
+            List(selection: showingSelection ? $selection : .constant(Set<UUID>())) {
                 ForEach(store.studySets) { set in
                     NavigationLink(destination: StudySetDetailView(studySetID: set.id)) {
                         VStack(alignment: .leading, spacing: 5) {
@@ -25,11 +26,23 @@ struct StudySetListView: View {
                     indexSet.map { store.studySets[$0] }.forEach { store.deleteStudySet($0) }
                 }
             }
-            .navigationTitle(NSLocalizedString("Your Study Sets", comment: ""))
+            .navigationTitle("Your Study Sets")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack {
-                        EditButton()
+                        Button(action: {
+                            withAnimation {
+                                if showingSelection {
+                                    showingSelection = false
+                                    selection.removeAll()
+                                } else {
+                                    showingSelection = true
+                                }
+                            }
+                        }) {
+                            Text(showingSelection ? "Cancel Selection" : "Select Sets")
+                        }
+                        
                         Button(action: { showingEditSheet = true }) {
                             Image(systemName: "plus")
                         }
@@ -38,9 +51,9 @@ struct StudySetListView: View {
                 
                 ToolbarItem(placement: .navigationBarLeading) {
                     Menu {
-                        Picker(NSLocalizedString("Language", comment: ""), selection: $appLanguage) {
-                            Text(NSLocalizedString("English", comment: "")).tag("en")
-                            Text(NSLocalizedString("Türkçe", comment: "")).tag("tr")
+                        Picker("Language", selection: $appLanguage) {
+                            Text("English").tag("en")
+                            Text("Türkçe").tag("tr")
                         }
                     } label: {
                         Image(systemName: "gearshape")
@@ -50,7 +63,7 @@ struct StudySetListView: View {
             .safeAreaInset(edge: .bottom) {
                 if selection.count > 1 {
                     NavigationLink(destination: TestSessionView(studySets: store.studySets.filter { selection.contains($0.id) }, store: store)) {
-                        Text(String(format: NSLocalizedString("Mix & Test (%d sets)", comment: ""), selection.count))
+                        Text("Mix & Test (\(selection.count) sets)")
                             .fontWeight(.bold)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
