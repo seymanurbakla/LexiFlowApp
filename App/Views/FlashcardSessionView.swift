@@ -17,12 +17,12 @@ struct FlashcardSessionView: View {
                     Image(systemName: "party.popper.fill")
                         .font(.system(size: 60))
                         .foregroundColor(.blue)
-                    Text("You've studied all cards in this set!")
+                    Text(NSLocalizedString("You've studied all cards in this set!", comment: ""))
                         .font(.title2)
                         .fontWeight(.bold)
                         .multilineTextAlignment(.center)
                     
-                    Button("Reset Flashcards") {
+                    Button(NSLocalizedString("Reset Flashcards", comment: "")) {
                         withAnimation {
                             viewModel.resetProgress()
                         }
@@ -103,11 +103,11 @@ struct FlashcardSessionView: View {
                 .padding(.top, 20)
             }
         }
-        .navigationTitle("Flashcards")
+        .navigationTitle(NSLocalizedString("Flashcards", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Reset") {
+                Button(NSLocalizedString("Reset", comment: "")) {
                     withAnimation {
                         viewModel.resetProgress()
                     }

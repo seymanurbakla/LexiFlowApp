@@ -14,23 +14,23 @@ struct StudySetDetailView: View {
         Group {
             if let validSet = set {
                 List {
-                    Section(header: Text("Study Modes")) {
-                        Toggle("Shuffle Cards", isOn: $isShuffled)
+                    Section(header: Text(NSLocalizedString("Study Modes", comment: ""))) {
+                        Toggle(NSLocalizedString("Shuffle Cards", comment: ""), isOn: $isShuffled)
                         
                         NavigationLink(destination: FlashcardSessionView(studySet: validSet, store: store, isShuffled: isShuffled)) {
-                            Label("Flashcards", systemImage: "square.fill.on.square.fill")
+                            Label(NSLocalizedString("Flashcards", comment: ""), systemImage: "square.fill.on.square.fill")
                                 .font(.headline)
                                 .foregroundColor(.blue)
                         }
                         
                         NavigationLink(destination: TestSessionView(studySets: [validSet], store: store)) {
-                            Label("Test", systemImage: "checkmark.seal.fill")
+                            Label(NSLocalizedString("Test", comment: ""), systemImage: "checkmark.seal.fill")
                                 .font(.headline)
                                 .foregroundColor(.green)
                         }
                     }
                     
-                    Section(header: Text("Cards (\(validSet.cards.count))")) {
+                    Section(header: Text("\(NSLocalizedString("Cards", comment: "")) (\(validSet.cards.count))")) {
                         ForEach(validSet.cards) { card in
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
@@ -61,7 +61,7 @@ struct StudySetDetailView: View {
                 .navigationTitle(validSet.title)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Edit") {
+                        Button(NSLocalizedString("Edit", comment: "")) {
                             showingEditSheet = true
                         }
                     }
@@ -72,7 +72,7 @@ struct StudySetDetailView: View {
                     }
                 }
             } else {
-                Text("Study set not found.")
+                Text(NSLocalizedString("Study set not found.", comment: ""))
             }
         }
     }

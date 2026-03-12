@@ -25,7 +25,7 @@ struct StudySetListView: View {
                     indexSet.map { store.studySets[$0] }.forEach { store.deleteStudySet($0) }
                 }
             }
-            .navigationTitle("Your Study Sets")
+            .navigationTitle(NSLocalizedString("Your Study Sets", comment: ""))
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack {
@@ -38,9 +38,9 @@ struct StudySetListView: View {
                 
                 ToolbarItem(placement: .navigationBarLeading) {
                     Menu {
-                        Picker("Language", selection: $appLanguage) {
-                            Text("English").tag("en")
-                            Text("Türkçe").tag("tr")
+                        Picker(NSLocalizedString("Language", comment: ""), selection: $appLanguage) {
+                            Text(NSLocalizedString("English", comment: "")).tag("en")
+                            Text(NSLocalizedString("Türkçe", comment: "")).tag("tr")
                         }
                     } label: {
                         Image(systemName: "gearshape")

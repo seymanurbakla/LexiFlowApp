@@ -8,18 +8,18 @@ struct EditStudySetView: View {
     
     var body: some View {
         Form {
-            Section(header: Text("Set Details")) {
-                TextField("Title", text: $studySet.title)
+            Section(header: Text(NSLocalizedString("Title", comment: ""))) {
+                TextField(NSLocalizedString("Title", comment: ""), text: $studySet.title)
             }
             
-            Section(header: Text("Cards")) {
+            Section(header: Text(NSLocalizedString("Cards", comment: ""))) {
                 ForEach($studySet.cards) { $card in
                     VStack(alignment: .leading) {
-                        TextField("Word", text: $card.word)
+                        TextField(NSLocalizedString("Word", comment: ""), text: $card.word)
                             .font(.headline)
-                        TextField("Meaning", text: $card.meaning)
+                        TextField(NSLocalizedString("Meaning", comment: ""), text: $card.meaning)
                             .font(.subheadline)
-                        TextField("Example Sentence (Optional)", text: $card.exampleSentence)
+                        TextField(NSLocalizedString("Example Sentence (Optional)", comment: ""), text: $card.exampleSentence)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -32,18 +32,18 @@ struct EditStudySetView: View {
                 Button(action: {
                     studySet.cards.append(Flashcard(word: "", meaning: ""))
                 }) {
-                    Label("Add Card", systemImage: "plus.circle.fill")
+                    Label(NSLocalizedString("Add Card", comment: ""), systemImage: "plus.circle.fill")
                 }
             }
         }
-        .navigationTitle(studySet.title.isEmpty ? "New Study Set" : "Edit Study Set")
+        .navigationTitle(studySet.title.isEmpty ? NSLocalizedString("New Study Set", comment: "") : NSLocalizedString("Edit Study Set", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
+                Button(NSLocalizedString("Cancel", comment: "")) { dismiss() }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button("Save") {
+                Button(NSLocalizedString("Save", comment: "")) {
                     saveSet()
                     dismiss()
                 }
