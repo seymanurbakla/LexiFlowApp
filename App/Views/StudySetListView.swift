@@ -3,6 +3,7 @@ import SwiftUI
 struct StudySetListView: View {
     @EnvironmentObject var store: StudySetStore
     @State private var showingMixSheet = false
+    @State private var showingEditSheet = false
     @EnvironmentObject var languageManager: AppLanguageManager
     
     var body: some View {
