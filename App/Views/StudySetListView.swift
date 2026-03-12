@@ -2,10 +2,9 @@ import SwiftUI
 
 struct StudySetListView: View {
     @EnvironmentObject var store: StudySetStore
-    @EnvironmentObject var authManager: AuthManager
     @State private var showingEditSheet = false
     @State private var selection = Set<UUID>()
-    @AppStorage("appLanguage") private var appLanguage = "en"
+    @AppStorage("appLanguage") private var appLanguage = "tr"
     
     var body: some View {
         NavigationStack {
@@ -42,14 +41,6 @@ struct StudySetListView: View {
                         Picker("Language", selection: $appLanguage) {
                             Text("English").tag("en")
                             Text("Türkçe").tag("tr")
-                        }
-                        
-                        Divider()
-                        
-                        Button(role: .destructive, action: {
-                            authManager.signOut()
-                        }) {
-                            Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
                         }
                     } label: {
                         Image(systemName: "gearshape")
