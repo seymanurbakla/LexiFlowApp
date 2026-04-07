@@ -4,7 +4,6 @@ struct StudySetListView: View {
     @EnvironmentObject var store: StudySetStore
     @State private var showingMixSheet = false
     @State private var showingEditSheet = false
-    @EnvironmentObject var languageManager: AppLanguageManager
     
     var body: some View {
         NavigationStack {
@@ -36,17 +35,6 @@ struct StudySetListView: View {
                         Button(action: { showingEditSheet = true }) {
                             Image(systemName: "plus")
                         }
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Menu {
-                        Picker("Language", selection: $languageManager.storedLanguage) {
-                            Text("English").tag("en")
-                            Text("Türkçe").tag("tr")
-                        }
-                    } label: {
-                        Image(systemName: "gearshape")
                     }
                 }
             }
