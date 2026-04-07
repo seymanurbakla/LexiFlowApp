@@ -5,7 +5,7 @@ class AIManager {
     
     // IMPORTANT: Replace this with your actual Gemini API Key from Google AI Studio (https://aistudio.google.com/app/apikey)
     // Generating an API key is completely free.
-    private let apiKey = "AIzaSyCHlfcD32rrFMd2TLDa6j9Ya_KFc7Wri6o"
+    private let apiKey = ""
     
     func generateExampleSentence(for word: String) async throws -> String {
         guard !apiKey.isEmpty else {
