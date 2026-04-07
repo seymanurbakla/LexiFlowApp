@@ -31,22 +31,53 @@ struct FlashcardSessionView: View {
                 }
                 .padding()
             } else {
-                // Progress Counter
-                HStack {
-                    Spacer()
-                    Text("\(viewModel.currentIndex + 1) / \(viewModel.cardsToReview.count)")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal)
-                }
+                // Progress Counter Centered
+                Text("\(viewModel.currentIndex + 1) / \(viewModel.totalCardsInRound)")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 8)
                 
                 ZStack {
                     if let card = viewModel.currentCard {
                         FlashcardCardView(card: card, flipped: $flipped)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                    .fill(offset.width > 0 ? Color.green : Color.red)
-                                    .opacity(min(Double(abs(offset.width) / 300.0), 0.5))
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                        .fill(offset.width > 0 ? Color.green : Color.red)
+                                        .opacity(min(Double(abs(offset.width) / 300.0), 0.4))
+                                    
+                                    if offset.width > 40 {
+                                        VStack {
+                                            Text("I KNOW")
+                                                .font(.system(size: 36, weight: .heavy, design: .rounded))
+                                                .foregroundColor(.green)
+                                                .padding(12)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .stroke(Color.green, lineWidth: 4)
+                                                )
+                                                .rotationEffect(.degrees(-15))
+                                            Spacer()
+                                        }
+                                        .padding(.top, 40)
+                                        .opacity(min(Double(abs(offset.width) / 100.0), 1.0))
+                                    } else if offset.width < -40 {
+                                        VStack {
+                                            Text("DON'T KNOW")
+                                                .font(.system(size: 36, weight: .heavy, design: .rounded))
+                                                .foregroundColor(.red)
+                                                .padding(12)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .stroke(Color.red, lineWidth: 4)
+                                                )
+                                                .rotationEffect(.degrees(15))
+                                            Spacer()
+                                        }
+                                        .padding(.top, 40)
+                                        .opacity(min(Double(abs(offset.width) / 100.0), 1.0))
+                                    }
+                                }
                             )
                             .zIndex(1)
                             .offset(x: offset.width, y: offset.height)
@@ -65,42 +96,71 @@ struct FlashcardSessionView: View {
                 }
                 .padding()
                 
-                HStack(spacing: 40) {
-                    Button(action: {
-                        if let card = viewModel.currentCard {
-                            withAnimation {
-                                offset = CGSize(width: -500, height: 0)
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                viewModel.swipeLeft(on: card)
-                                offset = .zero
-                                flipped = false
-                            }
-                        }
-                    }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 50))
+                HStack {
+                    // Left counter (Don't Know)
+                    VStack {
+                        Text("\(viewModel.sessionUnknownCount)")
+                            .font(.title2.bold())
                             .foregroundColor(.red)
+                        Text("Don't Know")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(width: 80)
+                    
+                    Spacer()
+                    
+                    HStack(spacing: 30) {
+                        Button(action: {
+                            if let card = viewModel.currentCard {
+                                withAnimation {
+                                    offset = CGSize(width: -500, height: 0)
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    viewModel.swipeLeft(on: card)
+                                    offset = .zero
+                                    flipped = false
+                                }
+                            }
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 50))
+                                .foregroundColor(.red)
+                        }
+                        
+                        Button(action: {
+                            if let card = viewModel.currentCard {
+                                withAnimation {
+                                    offset = CGSize(width: 500, height: 0)
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    viewModel.swipeRight(on: card)
+                                    offset = .zero
+                                    flipped = false
+                                }
+                            }
+                        }) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 50))
+                                .foregroundColor(.green)
+                        }
                     }
                     
-                    Button(action: {
-                        if let card = viewModel.currentCard {
-                            withAnimation {
-                                offset = CGSize(width: 500, height: 0)
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                viewModel.swipeRight(on: card)
-                                offset = .zero
-                                flipped = false
-                            }
-                        }
-                    }) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 50))
+                    Spacer()
+                    
+                    // Right Counter (I Know)
+                    VStack {
+                        Text("\(viewModel.sessionKnownCount)")
+                            .font(.title2.bold())
                             .foregroundColor(.green)
+                        Text("I Know")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
+                    .frame(width: 80)
                 }
-                .padding(.top, 20)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 15)
             }
         }
         .navigationTitle("Flashcards")
@@ -162,28 +222,57 @@ struct FlashcardCardView: View {
             VStack {
                 Spacer()
                 if !flipped {
-                    Text(card.word)
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .multilineTextAlignment(.center)
-                        .padding()
-                } else {
-                    Text(card.meaning)
-                        .font(.title)
-                        .fontWeight(.semibold)
-                        .multilineTextAlignment(.center)
-                        .padding()
-                    
-                    if !card.exampleSentence.isEmpty {
-                        Divider()
+                    VStack(spacing: 12) {
+                        Text(card.word)
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .multilineTextAlignment(.center)
                             .padding(.horizontal)
                         
-                        Text(card.exampleSentence)
-                            .font(.body)
-                            .italic()
-                            .foregroundColor(.secondary)
+                        Image(systemName: "speaker.wave.2.fill")
+                            .font(.title2)
+                            .foregroundColor(.blue)
+                            .padding(10)
+                            .background(Color.blue.opacity(0.1))
+                            .clipShape(Circle())
+                            .onTapGesture {
+                                SpeechManager.shared.speak(card.word)
+                            }
+                    }
+                } else {
+                    VStack {
+                        Text(card.meaning)
+                            .font(.title)
+                            .fontWeight(.semibold)
                             .multilineTextAlignment(.center)
-                            .padding()
+                            .padding(.horizontal)
+                        
+                        if !card.exampleSentence.isEmpty {
+                            Divider()
+                                .padding(.vertical, 8)
+                                .padding(.horizontal)
+                            
+                            VStack(spacing: 12) {
+                                Text(card.exampleSentence)
+                                    .font(.body)
+                                    .italic()
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal)
+                                
+                                let englishPart = card.exampleSentence.components(separatedBy: " (").first ?? card.exampleSentence
+                                
+                                Image(systemName: "speaker.wave.2.fill")
+                                    .font(.title3)
+                                    .foregroundColor(.blue)
+                                    .padding(8)
+                                    .background(Color.blue.opacity(0.1))
+                                    .clipShape(Circle())
+                                    .onTapGesture {
+                                        SpeechManager.shared.speak(englishPart)
+                                    }
+                            }
+                        }
                     }
                 }
                 Spacer()

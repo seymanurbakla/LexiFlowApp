@@ -31,29 +31,13 @@ class StudySetStore: ObservableObject {
         }
     }
     
-    private func getDocumentsDirectory() -> URL {
-        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-    }
-    
     private func saveToLocal() {
-        let url = getDocumentsDirectory().appendingPathComponent(fileName)
-        do {
-            let data = try JSONEncoder().encode(studySets)
-            try data.write(to: url, options: [.atomicWrite, .completeFileProtection])
-        } catch {
-            print("Could not save data: \(error.localizedDescription)")
-        }
+        StorageManager.shared.save(studySets, to: fileName)
     }
     
     private func loadFromLocal() {
-        let url = getDocumentsDirectory().appendingPathComponent(fileName)
-        guard FileManager.default.fileExists(atPath: url.path) else { return }
-        
-        do {
-            let data = try Data(contentsOf: url)
-            studySets = try JSONDecoder().decode([StudySet].self, from: data)
-        } catch {
-            print("Could not load data: \(error.localizedDescription)")
+        if let loadedSets = StorageManager.shared.load([StudySet].self, from: fileName) {
+            studySets = loadedSets
         }
     }
     
@@ -88,6 +72,49 @@ class StudySetStore: ObservableObject {
             }
             self.objectWillChange.send()
             saveToLocal()
+        }
+    }
+    
+    // MARK: - Export / Import
+    
+    func getExportURL() -> URL? {
+        let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent("LexiFlow_Backup.json")
+        do {
+            let data = try JSONEncoder().encode(studySets)
+            try data.write(to: tempFile, options: .atomicWrite)
+            return tempFile
+        } catch {
+            print("Export error: \(error)")
+            return nil
+        }
+    }
+    
+    func importData(from url: URL) {
+        // Attempt to access security scoped resource if coming from File Importer
+        let isAccessing = url.startAccessingSecurityScopedResource()
+        defer {
+            if isAccessing {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+        
+        do {
+            let data = try Data(contentsOf: url)
+            let importedSets = try JSONDecoder().decode([StudySet].self, from: data)
+            DispatchQueue.main.async {
+                // Merge current sets with imported sets without exact duplicating by ID
+                var currentSets = self.studySets
+                for newSet in importedSets {
+                    if let index = currentSets.firstIndex(where: { $0.id == newSet.id }) {
+                        currentSets[index] = newSet // Update existing
+                    } else {
+                        currentSets.append(newSet) // Add new
+                    }
+                }
+                self.studySets = currentSets
+            }
+        } catch {
+            print("Import failed: \(error)")
         }
     }
 }

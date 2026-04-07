@@ -5,6 +5,11 @@ class FlashcardSessionViewModel: ObservableObject {
     @Published var currentIndex: Int = 0
     @Published var isFinished: Bool = false
     
+    // New variables for displaying session progress
+    @Published var sessionKnownCount: Int = 0
+    @Published var sessionUnknownCount: Int = 0
+    @Published var totalCardsInRound: Int = 0
+    
     private var studySet: StudySet
     private var store: StudySetStore
     private var isShuffled: Bool
@@ -28,6 +33,7 @@ class FlashcardSessionViewModel: ObservableObject {
         }
         self.cardsToReview = nextCards
         self.currentIndex = 0
+        self.totalCardsInRound = self.cardsToReview.count
         
         if self.cardsToReview.isEmpty {
             self.isFinished = true
@@ -40,6 +46,12 @@ class FlashcardSessionViewModel: ObservableObject {
         updatedCard.isKnown = true
         store.updateFlashcard(updatedCard, in: studySet.id)
         
+        sessionKnownCount += 1
+        
+        // Log to stats
+        StatsManager.shared.logWordLearned()
+        StatsManager.shared.logStudySession()
+        
         // Update local studySet to reflect changes for the next round
         if let updatedSet = store.studySets.first(where: { $0.id == studySet.id }) {
             self.studySet = updatedSet
@@ -49,6 +61,7 @@ class FlashcardSessionViewModel: ObservableObject {
     }
     
     func swipeLeft(on card: Flashcard) {
+        sessionUnknownCount += 1
         // Do nothing to the store (it's already isKnown = false). Just advance.
         advanceCard()
     }
@@ -69,6 +82,8 @@ class FlashcardSessionViewModel: ObservableObject {
             self.studySet = updatedSet
         }
         
+        self.sessionKnownCount = 0
+        self.sessionUnknownCount = 0
         self.isFinished = false
         loadNextRound()
     }

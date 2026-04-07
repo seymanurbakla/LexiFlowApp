@@ -54,20 +54,30 @@ struct MixSetsSelectionView: View {
             }
             .safeAreaInset(edge: .bottom) {
                 if selection.count > 1 {
-                    NavigationLink(destination: TestSessionView(studySets: store.studySets.filter { selection.contains($0.id) }, store: store)) {
-                        Text("Mix & Test (\(selection.count) sets)")
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.indigo)
-                            .cornerRadius(10)
-                            .padding()
-                            .shadow(radius: 5)
-                            .padding(.bottom, 20)
+                    HStack(spacing: 10) {
+                        NavigationLink(destination: TestSessionView(studySets: store.studySets.filter { selection.contains($0.id) }, store: store, isHardMode: false)) {
+                            Text("Normal Mix")
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.indigo)
+                                .cornerRadius(10)
+                        }
+                        
+                        NavigationLink(destination: TestSessionView(studySets: store.studySets.filter { selection.contains($0.id) }, store: store, isHardMode: true)) {
+                            Text("AI Mix")
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.purple)
+                                .cornerRadius(10)
+                        }
                     }
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .animation(.spring(), value: selection.count)
+                    .padding(.horizontal)
+                    .shadow(radius: 5)
+                    .padding(.bottom, 20)
                 } else {
                     Text("Select at least 2 sets.")
                         .foregroundColor(.secondary)

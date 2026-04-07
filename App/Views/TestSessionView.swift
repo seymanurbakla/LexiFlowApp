@@ -8,13 +8,29 @@ struct TestSessionView: View {
     @State private var selectedAnswer: String? = nil
     @State private var showNextButton = false
     
-    init(studySets: [StudySet], store: StudySetStore) {
-        _viewModel = StateObject(wrappedValue: TestSessionViewModel(studySets: studySets, store: store))
+    init(studySets: [StudySet], store: StudySetStore, isHardMode: Bool = false) {
+        _viewModel = StateObject(wrappedValue: TestSessionViewModel(studySets: studySets, store: store, isHardMode: isHardMode))
     }
     
     var body: some View {
         VStack {
-            if viewModel.isFinished {
+            if viewModel.isLoadingAI {
+                VStack(spacing: 20) {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                        .padding()
+                    
+                    Text("AI is crafting tricky questions...")
+                        .font(.headline)
+                        .foregroundColor(.blue)
+                        
+                    Text("Preparing the ultimate challenge for \(viewModel.questions.count) words.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+            } else if viewModel.isFinished {
                 VStack(spacing: 20) {
                     Text("Test Complete!")
                         .font(.largeTitle)
@@ -57,6 +73,15 @@ struct TestSessionView: View {
                             if !showNextButton {
                                 selectedAnswer = option
                                 showNextButton = true
+                                
+                                // Auto advance after showing correct answer
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                    if showNextButton {
+                                        viewModel.answerCurrentQuestion(with: option)
+                                        selectedAnswer = nil
+                                        showNextButton = false
+                                    }
+                                }
                             }
                         }) {
                             Text(option)
@@ -75,17 +100,6 @@ struct TestSessionView: View {
                     }
                     
                     Spacer()
-                    
-                    if showNextButton {
-                        Button("Next") {
-                            viewModel.answerCurrentQuestion(with: selectedAnswer ?? "")
-                            selectedAnswer = nil
-                            showNextButton = false
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                    }
                 }
                 .padding()
             } else {

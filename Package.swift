@@ -18,6 +18,7 @@ let package = Package(
             name: "LexiFlowApp",
             targets: ["AppModule"],
             bundleIdentifier: "com.seymanurbakla.lexiflowapp",
+            teamIdentifier: "XH5Y963M89",
             displayVersion: "1.0",
             bundleVersion: "1",
             supportedDeviceFamilies: [

@@ -24,9 +24,15 @@ struct StudySetDetailView: View {
                         }
                         
                         NavigationLink(destination: TestSessionView(studySets: [validSet], store: store)) {
-                            Label("Test", systemImage: "checkmark.seal.fill")
+                            Label("Test (Normal)", systemImage: "checkmark.seal.fill")
                                 .font(.headline)
                                 .foregroundColor(.green)
+                        }
+                        
+                        NavigationLink(destination: TestSessionView(studySets: [validSet], store: store)) {
+                            Label("Test (AI Hard Mode)", systemImage: "brain.head.profile")
+                                .font(.headline)
+                                .foregroundColor(.purple)
                         }
                     }
                     
